@@ -1,0 +1,20 @@
+FROM 721495903582.dkr.ecr.ap-southeast-2.amazonaws.com/python:slim-3.7
+
+RUN pip install pipenv
+RUN apt-get update
+RUN apt-get -y install curl
+
+WORKDIR /app
+
+COPY /apps/pipeline/Pipfile /apps/pipeline/Pipfile.lock /app/
+
+ENV PIPENV_VENV_IN_PROJECT=1
+RUN pipenv install
+
+ENV PATH="/app/.venv/bin:$PATH"
+COPY /apps/pipeline /app/
+
+
+
+
+CMD ["python3", "data_ingestion_runner.py"]
