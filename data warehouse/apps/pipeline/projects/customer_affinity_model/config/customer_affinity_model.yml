@@ -1,0 +1,92 @@
+dag_name: de_daily_load_customer_affinity_model
+
+Name: Calculate User Affinity Score
+
+LogUri: s3://aws-logs-721495903582-ap-southeast-2/elasticmapreduce/
+ReleaseLabel: emr-6.5.0
+Instances: {
+        "InstanceGroups": [
+            {
+                "Name": "Master node",
+                "Market": "SPOT",
+                "InstanceRole": "MASTER",
+                "InstanceType": "m5.xlarge",
+                "InstanceCount": 1,
+            },
+            {
+                "Name": "Core - 2",
+                "Market": "SPOT",
+                "InstanceRole": "CORE",
+                "InstanceType": "m5.xlarge",
+                "InstanceCount": 2,
+            },
+        ],
+        "KeepJobFlowAliveWhenNoSteps": False,
+        "TerminationProtected": False,
+        "Ec2SubnetId": "subnet-038f4565",
+        "EmrManagedMasterSecurityGroup": "sg-0783211af9669a1ec",
+        "EmrManagedSlaveSecurityGroup": "sg-09eb292f37c680cce",
+    }
+Steps: [
+    {
+        "Name": "Calculate Affinity Score",
+        "ActionOnFailure": "TERMINATE_CLUSTER",
+        "HadoopJarStep": {
+            "Jar": "command-runner.jar",
+            "Args": [
+                "spark-submit",
+                "--deploy-mode",
+                "cluster",
+                "s3://ac-shopping-emr-scripts/customer_affinity_model/calculate_customer_affinity_score.py",
+            ],
+        },
+    },
+]
+
+BootstrapActions: [
+        {
+            "Name": "Custom action",
+            "ScriptBootstrapAction": {"Path": "s3://ac-shopping-emr-scripts/bootstrap.sh"},
+        },
+    ]
+
+Applications: [
+        {"Name": "Hadoop"},
+        {"Name": "Spark"},
+        {"Name": "Hive"}
+    ]
+
+Configurations: [
+        {
+            "Classification": "spark",
+            "Properties": {"maximizeResourceAllocation": "true"},
+        },
+        {
+            "Configurations": [
+                {
+                    "Classification": "export",
+                    "Properties": {
+                        "PYSPARK_PYTHON": "/usr/bin/python3",
+                        "PYTHONPATH": "$PYTHONPATH:/home/hadoop/bootstrap",
+                    },
+                }
+            ],
+            "Classification": "spark-env",
+            "Properties": {},
+        },
+        {
+            "Classification": "spark-defaults",
+            "Properties": {
+                "spark.executor.extraClassPath": "/usr/lib/spark/jars/mysql-connector-java-8.0.21.jar:/usr/lib/spark/jars/RedshiftJDBC42.jar:/usr/lib/zeppelin/interpreter/spark/*:/usr/lib/zeppelin/lib/interpreter/*::/usr/lib/hadoop-lzo/lib/*:/usr/lib/hadoop/hadoop-aws.jar:/usr/share/aws/aws-java-sdk/*:/usr/share/aws/emr/emrfs/conf:/usr/share/aws/emr/emrfs/lib/*:/usr/share/aws/emr/emrfs/auxlib/*:/usr/share/aws/hmclient/lib/aws-glue-datacatalog-spark-client.jar:/usr/share/aws/sagemaker-spark-sdk/lib/sagemaker-spark-sdk.jar:/usr/lib/zeppelin/interpreter/spark/spark-interpreter-0.8.0.jar:/etc/hadoop/conf:/usr/share/aws/emr/ddb/lib/emr-ddb-hive.jar:/usr/lib/spark/jars/ojdbc6.jar:/usr/share/aws/emr/ddb/lib/emr-ddb-hadoop.jar",
+                "spark.driver.extraClassPath": "/usr/lib/spark/jars/mysql-connector-java-8.0.21.jar:/usr/lib/spark/jars/RedshiftJDBC42.jar:/usr/lib/zeppelin/interpreter/spark/*:/usr/lib/zeppelin/lib/interpreter/*::/usr/lib/hadoop-lzo/lib/*:/usr/lib/hadoop/hadoop-aws.jar:/usr/share/aws/aws-java-sdk/*:/usr/share/aws/emr/emrfs/conf:/usr/share/aws/emr/emrfs/lib/*:/usr/share/aws/emr/emrfs/auxlib/*:/usr/share/aws/hmclient/lib/aws-glue-datacatalog-spark-client.jar:/usr/share/aws/sagemaker-spark-sdk/lib/sagemaker-spark-sdk.jar:/usr/lib/zeppelin/interpreter/spark/spark-interpreter-0.8.0.jar:/etc/hadoop/conf:/usr/share/aws/emr/ddb/lib/emr-ddb-hive.jar:/usr/lib/spark/jars/ojdbc6.jar:/usr/share/aws/emr/ddb/lib/emr-ddb-hadoop.jar",
+                "spark.stage.maxConsecutiveAttempts": "10"
+
+            },
+        },
+    ]
+
+VisibleToAllUsers: True
+
+JobFlowRole: EMR_EC2_DefaultRole
+
+ServiceRole: EMR_DefaultRole

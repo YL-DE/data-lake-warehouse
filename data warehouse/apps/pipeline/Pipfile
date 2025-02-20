@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pandas = "*"
+boto3 = "*"
+psycopg2-binary = "*"
+requests = "*"
+pyyaml = "*"
+
+[packages]
+pandas = "*"
+boto3 = "*"
+psycopg2-binary = "*"
+requests = "*"
+pyyaml = "*"
+python-facebook-api = "*"
+
+[requires]
+python_version = "3.7"
